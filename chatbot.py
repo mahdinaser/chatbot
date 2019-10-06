@@ -11,6 +11,8 @@ import re
 
 import os
 import tensorflow as tf
+
+DATA_FOLDER = "Data\\"
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 filename = 'opiates_0.txt'
@@ -29,20 +31,28 @@ def parse(path):
 
 def getDF(path):
   import json
-  with open('opiates_0.txt') as json_file:
-    data = json.load(json_file)
+  import os
 
+  directory = os.fsencode(DATA_FOLDER)
   collection = []
-  for d in data['opiates']:
-      for item in d:
-          value = d.get(item)[0]
-          question = value.get('0_title')
-          comments = value['comments'][0]
-          answerlist=[]
-          for comment in comments:
-            answer = comments.get(comment)
-            answerlist.append(answer)
-          collection.append([question,answerlist[0]])
+  for file in os.listdir(directory):
+      filename = os.fsdecode(file)
+      if filename.endswith("0.txt"):
+          #print(filename)
+          with open(DATA_FOLDER+"\\"+filename) as json_file:
+            data = json.load(json_file)
+
+          for d in data['opiates']:
+              for item in d:
+                  value = d.get(item)[0]
+                  question = value.get('0_title')
+                  comments = value['comments'][0]
+                  answerlist=[]
+                  for comment in comments:
+                    answer = comments.get(comment)
+                    answerlist.append(answer)
+                  collection.append([question,answerlist])
+          #print(len(collection))
 
 
   # Create the pandas DataFrame
@@ -72,14 +82,19 @@ def init():
 
   #  print("start to load the model")
     graph = tf.Graph()
+    global embed, message_embeddings
+    embed,message_embeddings  = method_name(messages, tf, graph)
 
+
+def method_name(messages, tf, graph):
     with tf.Session(graph=graph) as session:
-   # with tf.Session() as session:
         embed = hub.Module("%s" % SENTENCE_ENCODER_LARGE_)
         session.run([tf.global_variables_initializer(), tf.tables_initializer()])
         message_embeddings = session.run(embed(messages))
+    return embed,message_embeddings
 
-   # print("initialization is over")
+
+# print("initialization is over")
 
 
 
@@ -97,14 +112,30 @@ def cosine_similarity(v1, v2):
 def getChatResponse(query):
   #  print(query)
 
+    query_embeddings = query_embedding([query])
+    result = [cosine_similarity(x, query_embeddings) for x in message_embeddings]
+    response = reply[np.argmax(result)]
+
+
+    # get the most approporate response
+    response= response.replace("[",'')
+    response = response.replace("]",'')
+    response = response.replace("\"", '\'')
+    response = response.split(", '")
+    replies = query_embedding(response)
+    response_matching = [cosine_similarity(x, query_embeddings) for x in replies]
+
+    argmax = np.argmax(response_matching)
+    final_response = response[argmax]
+    return (final_response)
+
+
+def query_embedding(query):
     with tf.Session(graph=graph) as session:
         session.run([tf.global_variables_initializer(), tf.tables_initializer()])
-        query_embeddings = session.run(embed([query]))
+        query_embeddings = session.run(embed(query))
+    return query_embeddings
 
-    result = [cosine_similarity(x, query_embeddings) for x in message_embeddings]
-
-  #  print(messages[np.argmax(result)])
-    return (reply[np.argmax(result)])
 
 if __name__ == '__main__':
   init()
