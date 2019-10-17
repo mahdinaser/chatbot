@@ -4,7 +4,7 @@ import requests
 # defining the api-endpoint
 API_ENDPOINT = "http://127.0.0.1:5000/chatbot"
 
-sampleQuery = 'something to chill out'
+sampleQuery = 'Will muscle relaxers help me sleep and help rls at night during detox?'
 
 # data to be sent to api
 data = {'query': sampleQuery}
@@ -14,4 +14,4 @@ r = requests.post(url=API_ENDPOINT, data=data)
 
 # extracting response text
 pastebin_url = r.text
-print("The pastebin URL is:%s" % pastebin_url)
+print(pastebin_url)
