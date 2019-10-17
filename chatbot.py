@@ -8,11 +8,9 @@ import numpy as np
 import os
 import pandas as pd
 import re
-
+import glob
 import os
 import tensorflow as tf
-
-DATA_FOLDER = "Data\\"
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 filename = 'opiates_0.txt'
@@ -30,39 +28,50 @@ def parse(path):
     yield eval(l)
 
 def getDF(path):
-  import json
-  import os
 
-  directory = os.fsencode(DATA_FOLDER)
-  collection = []
-  for file in os.listdir(directory):
-      filename = os.fsdecode(file)
-      if filename.endswith("0.txt"):
-          #print(filename)
-          with open(DATA_FOLDER+"\\"+filename) as json_file:
-            data = json.load(json_file)
+  path ="data\\"  # use your path
+  all_files = glob.glob(path + "/opiates*.txt")
 
-          for d in data['opiates']:
-              for item in d:
-                  value = d.get(item)[0]
-                  question = value.get('0_title')
-                  comments = value['comments'][0]
-                  answerlist=[]
-                  for comment in comments:
-                    answer = comments.get(comment)
-                    answerlist.append(answer)
-                  collection.append([question,answerlist])
-          #print(len(collection))
+  li = []
+
+  for filename in all_files:
+      df2 = pd.read_csv(filename, index_col=None, header=0)
+      li.append(df2)
+
+  df = pd.concat(li, axis=0, ignore_index=True)
 
 
-  # Create the pandas DataFrame
-  df = pd.DataFrame(collection, columns=['question', 'answer'])
+  # directory = os.fsencode("C:\\Users\\mahdi\\PycharmProjects\\chatbot")
+  # collection = []
+  # for file in os.listdir(directory):
+  #     filename = os.fsdecode(file)
+  #     if filename.endswith("0.txt"):
+  #         #print(filename)
+  #         with open(filename) as json_file:
+  #           data = json.load(json_file)
+  #
+  #         for d in data['opiates']:
+  #             for item in d:
+  #                 value = d.get(item)[0]
+  #                 question = value.get('0_title')
+  #                 comments = value['comments'][0]
+  #                 answerlist=[]
+  #                 for comment in comments:
+  #                   answer = comments.get(comment)
+  #                   answerlist.append(answer)
+  #                 collection.append([question,answerlist])
+  #
+  #
+  # # Create the pandas DataFrame
+  # df = pd.DataFrame(collection, columns=['question', 'answer'])
+
+  df = df.groupby(['question'])['answer'].apply(lambda x: '||'.join(x)).reset_index()
 
   return df
 
 
 def init():
-    global query, messages, reply,message_embeddings ,tf, embed ,graph
+    global query, listOfQuestions, listOfAnswers,question_embeddings ,tf, embed ,graph
   #  print('Start the initialization ')
     df = getDF('%s' % filename)
     # Import the Universal Sentence Encoder's TF Hub module
@@ -74,16 +83,16 @@ def init():
 
    # print('total questions',len(questionList),' total answers',len(answerList))
 
-    messages = questionList
-    reply = answerList
+    listOfQuestions = questionList
+    listOfAnswers = answerList
     tf.compat.v1.logging.set_verbosity( tf.compat.v1.logging.ERROR)
 
 
 
   #  print("start to load the model")
     graph = tf.Graph()
-    global embed, message_embeddings
-    embed,message_embeddings  = method_name(messages, tf, graph)
+    global embed, question_embeddings
+    embed, question_embeddings  = method_name(listOfQuestions, tf, graph)
 
 
 def method_name(messages, tf, graph):
@@ -113,19 +122,30 @@ def getChatResponse(query):
   #  print(query)
 
     query_embeddings = query_embedding([query])
-    result = [cosine_similarity(x, query_embeddings) for x in message_embeddings]
-    response = reply[np.argmax(result)]
+    result = [cosine_similarity(x, query_embeddings) for x in question_embeddings]
+    response = listOfAnswers[np.argmax(result)]
+    question = listOfQuestions[np.argmax(result)]
 
+    print("question ",question)
 
     # get the most approporate response
+    #print("before",response)
     response= response.replace("[",'')
     response = response.replace("]",'')
     response = response.replace("\"", '\'')
-    response = response.split(", '")
+    #response = response.split(", '")
+    #print("after", response)
+
+
+    response = response.split("||")
+
+    print('length of responses',len(response))
+
     replies = query_embedding(response)
     response_matching = [cosine_similarity(x, query_embeddings) for x in replies]
 
     argmax = np.argmax(response_matching)
+    print("selected index",argmax)
     final_response = response[argmax]
     return (final_response)
 
