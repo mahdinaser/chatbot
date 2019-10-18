@@ -29,7 +29,7 @@ def parse(path):
 
 def getDF(path):
 
-  path ="data\\"  # use your path
+  path ="data"  # use your path
   all_files = glob.glob(path + "/opiates*.txt")
 
   li = []
@@ -99,7 +99,9 @@ def method_name(messages, tf, graph):
     with tf.Session(graph=graph) as session:
         embed = hub.Module("%s" % SENTENCE_ENCODER_LARGE_)
         session.run([tf.global_variables_initializer(), tf.tables_initializer()])
-        message_embeddings = session.run(embed(messages))
+        #message_embeddings = session.run(embed(messages))
+        message_embeddings = np.load('embedding.dat.npy')
+        #np.save('embedding.dat',message_embeddings)
     return embed,message_embeddings
 
 
