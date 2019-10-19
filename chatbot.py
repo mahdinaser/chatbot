@@ -11,13 +11,14 @@ import re
 import glob
 import os
 import tensorflow as tf
+import numpy as np
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 filename = 'opiates_0.txt'
 
-SENTENCE_ENCODER_LARGE_ = "https://tfhub.dev/google/universal-sentence-encoder-large/3"
-
-module_url = SENTENCE_ENCODER_LARGE_
+SENTENCE_ENCODER_LARGE_ = "model/3"
+SENTENCE_ENCODER_MEDIUM = "model/2"
+module_url = SENTENCE_ENCODER_MEDIUM
 
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -29,7 +30,7 @@ def parse(path):
 
 def getDF(path):
 
-  path ="data"  # use your path
+  path ="data\\"  # use your path
   all_files = glob.glob(path + "/opiates*.txt")
 
   li = []
