@@ -99,7 +99,7 @@ def prawSubreddit(subName, lm):
 
     df = pd.DataFrame(collection, columns=['question', 'answer'])
     print(len(df))
-    df.to_csv("{}.txt".format(subName+timestr))
+    df.to_csv("data/"+"{}.txt".format(subName+timestr))
     #writeOutput("{}_{}.txt".format(subName+timestr,fileCount),redditData)
 
 def userExistInComments(commentList, user):
@@ -108,7 +108,7 @@ def userExistInComments(commentList, user):
     return False
 
 def writeOutput(fileName, data):
-    outputFile = open(fileName, "w")
+    outputFile = open('data/'+fileName, "w")
     outputFile.write(json.dumps(data, sort_keys=True))
 
 # After X amount of seconds, update progress to terminal
@@ -138,7 +138,7 @@ if __name__ == '__main__':
     def job():
         prawSubreddit(args.subreddit, limit)
 
-    schedule.every().day.at("22:33").do(  job  )
+    schedule.every().day.at("02:18").do(  job  )
 
     while True:
         schedule.run_pending()

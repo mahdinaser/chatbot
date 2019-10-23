@@ -30,7 +30,7 @@ def parse(path):
 
 def getDF(path):
 
-  path ="data\\"  # use your path
+  path ="data"  # use your path
   all_files = glob.glob(path + "/opiates*.txt")
 
   li = []
