@@ -7,6 +7,8 @@ cb.init()
 
 @app.route('/')
 def hello():
+    cb.init2()
+    cb.newReq()
     return "Hello World!"
 
 
@@ -14,9 +16,7 @@ def hello():
 @app.route('/chatbot/', methods=["POST"])
 def chat():
     query = request.form['query']
-  #  print(query)
-    resp= cb.getChatResponse(query)
-  #  print(resp)
+    resp= cb.request2(query)
     return str(resp)
 
 

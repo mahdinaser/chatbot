@@ -12,6 +12,10 @@ import glob
 import os
 import tensorflow as tf
 import numpy as np
+import os.path
+from os import path
+
+DATA_FILE = 'embedding.dat.npy'
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 filename = 'opiates_0.txt'
@@ -22,7 +26,7 @@ module_url = SENTENCE_ENCODER_MEDIUM
 
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
-
+modelInitialize = False
 def parse(path):
   g = gzip.open(path, 'rb')
   for l in g:
@@ -40,39 +44,14 @@ def getDF(path):
       li.append(df2)
 
   df = pd.concat(li, axis=0, ignore_index=True)
-
-
-  # directory = os.fsencode("C:\\Users\\mahdi\\PycharmProjects\\chatbot")
-  # collection = []
-  # for file in os.listdir(directory):
-  #     filename = os.fsdecode(file)
-  #     if filename.endswith("0.txt"):
-  #         #print(filename)
-  #         with open(filename) as json_file:
-  #           data = json.load(json_file)
-  #
-  #         for d in data['opiates']:
-  #             for item in d:
-  #                 value = d.get(item)[0]
-  #                 question = value.get('0_title')
-  #                 comments = value['comments'][0]
-  #                 answerlist=[]
-  #                 for comment in comments:
-  #                   answer = comments.get(comment)
-  #                   answerlist.append(answer)
-  #                 collection.append([question,answerlist])
-  #
-  #
-  # # Create the pandas DataFrame
-  # df = pd.DataFrame(collection, columns=['question', 'answer'])
-
   df = df.groupby(['question'])['answer'].apply(lambda x: '||'.join(x)).reset_index()
 
   return df
 
 
 def init():
-    global query, listOfQuestions, listOfAnswers,question_embeddings ,tf, embed ,graph
+    global query, listOfQuestions, listOfAnswers,question_embeddings ,tf, embed ,graph, session
+    modelInitialize = False
   #  print('Start the initialization ')
     df = getDF('%s' % filename)
     # Import the Universal Sentence Encoder's TF Hub module
@@ -82,27 +61,31 @@ def init():
     questionList = df['question'].astype(str).values.tolist()
     answerList = df['answer'].astype(str).values.tolist()
 
-   # print('total questions',len(questionList),' total answers',len(answerList))
-
     listOfQuestions = questionList
     listOfAnswers = answerList
     tf.compat.v1.logging.set_verbosity( tf.compat.v1.logging.ERROR)
 
-
-
-  #  print("start to load the model")
     graph = tf.Graph()
     global embed, question_embeddings
     embed, question_embeddings  = method_name(listOfQuestions, tf, graph)
 
+    graph2 = tf.Graph()
+    with tf.Session(graph=graph2) as session:
+        session.run([tf.global_variables_initializer(), tf.tables_initializer()])
+
+    init2()
 
 def method_name(messages, tf, graph):
+    global session
     with tf.Session(graph=graph) as session:
         embed = hub.Module("%s" % SENTENCE_ENCODER_LARGE_)
         session.run([tf.global_variables_initializer(), tf.tables_initializer()])
-        #message_embeddings = session.run(embed(messages))
-        message_embeddings = np.load('embedding.dat.npy')
-        #np.save('embedding.dat',message_embeddings)
+
+        if path.exists(DATA_FILE):
+            message_embeddings = np.load(DATA_FILE)
+        else:
+             message_embeddings = session.run(embed(messages))
+             np.save('embedding.dat',message_embeddings)
     return embed,message_embeddings
 
 
@@ -120,44 +103,78 @@ def cosine_similarity(v1, v2):
         return 0
     return np.dot(v1, v2[0]) / (mag1 * mag2)
 
+def init2():
+    # Create graph and finalize (finalizing optional but recommended).
+    global embedded_text,text_input,session2
+    g = tf.Graph()
+    with g.as_default():
+        # We will be feeding 1D tensors of text into the graph.
+        text_input = tf.placeholder(dtype=tf.string, shape=[None])
+        embed = hub.Module(SENTENCE_ENCODER_LARGE_)
+        embedded_text = embed(text_input)
+        init_op = tf.group([tf.global_variables_initializer(), tf.tables_initializer()])
+    g.finalize()
 
-def getChatResponse(query):
-  #  print(query)
+    # Create session and initialize.
+    session2 = tf.Session(graph=g)
+    session2.run(init_op)
 
-    query_embeddings = query_embedding([query])
+def newReq(input):
+    result = session2.run(embedded_text, feed_dict={text_input:input})
+    return result
+    #print(result)
+
+def request2(query):
+    query_embeddings = newReq([query])  # query_embedding([query],session)
+
     result = [cosine_similarity(x, query_embeddings) for x in question_embeddings]
+
     response = listOfAnswers[np.argmax(result)]
-    question = listOfQuestions[np.argmax(result)]
-
-    print("question ",question)
-
-    # get the most approporate response
-    #print("before",response)
-    response= response.replace("[",'')
-    response = response.replace("]",'')
-    response = response.replace("\"", '\'')
-    #response = response.split(", '")
-    #print("after", response)
-
 
     response = response.split("||")
 
-    print('length of responses',len(response))
+    replies = newReq(response)  # query_embedding(response,session)
 
-    replies = query_embedding(response)
     response_matching = [cosine_similarity(x, query_embeddings) for x in replies]
 
     argmax = np.argmax(response_matching)
-    print("selected index",argmax)
+    # print("selected index",argmax)
     final_response = response[argmax]
     return (final_response)
 
+def getChatResponse(query):
 
-def query_embedding(query):
-    with tf.Session(graph=graph) as session:
-        session.run([tf.global_variables_initializer(), tf.tables_initializer()])
+
+
+        #print("--- %s initialization seconds ---" % (time.time() - start_time))
+        with tf.Session(graph=graph) as session:
+            session.run([tf.global_variables_initializer(), tf.tables_initializer()])
+
+
+            query_embeddings =  query_embedding([query],session)
+
+
+            result = [cosine_similarity(x, query_embeddings) for x in question_embeddings]
+
+
+            response = listOfAnswers[np.argmax(result)]
+
+            response = response.split("||")
+
+            replies = query_embedding(response,session)
+
+
+            response_matching = [cosine_similarity(x, query_embeddings) for x in replies]
+
+            argmax = np.argmax(response_matching)
+            #print("selected index",argmax)
+            final_response = response[argmax]
+        return (final_response)
+
+
+def query_embedding(query,session):
         query_embeddings = session.run(embed(query))
-    return query_embeddings
+        return query_embeddings
 
 
 if __name__ == '__main__':
