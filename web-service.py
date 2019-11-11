@@ -13,6 +13,14 @@ def hello():
 
 
 
+
+@app.route('/chatbot2/', methods=["POST"])
+def chat2():
+    query = request.form['query']
+    resp= cb.getChatResponse(query)
+    return str(resp)
+
+
 @app.route('/chatbot/', methods=["POST"])
 def chat():
     query = request.form['query']

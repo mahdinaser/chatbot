@@ -1,0 +1,99 @@
+.body{
+    position: relative;
+    min-height: 150px; 
+}
+
+.chatbox-panel{
+    position: absolute;
+    bottom: 20px;
+    right: 20px; 
+    border: 18px groove #1C6EA4;
+    border-radius: 5px;
+}
+
+
+.container {
+/*    border: 2px solid #dedede;
+    background-color: #f1f1f1;*/
+    border-radius: 5px;
+    padding: 10px;
+    margin: 10px 0;
+    width: 600px;
+}
+/*
+.darker {
+    border-color: #ccc;
+    background-color: #ddd;
+}
+*/
+.container::after {
+    content: "";
+    clear: both;
+    display: table;
+}
+
+.container img {
+    float: left;
+    max-width: 50px;
+    width: 50%;
+    margin-right: 20px;
+    border-radius: 20%;
+}
+
+.container img.right {
+    float: right;
+    margin-left: 20px;
+    margin-right: 0;
+}
+
+.time-right {
+    float: right;
+    color: #aaa;
+}
+
+.time-left {
+    float: left;
+    color: #999;
+}
+
+
+
+/*20190919*/
+.myframe {
+    background-color: white;
+    width: 600px;
+    height: 450px;
+    overflow: scroll;
+  }
+.btn{
+    margin-left: -25px;
+}
+
+#chatbox_div{
+    margin: 10px;
+}
+
+
+/*Animate chatbox*/
+.chatbox-panel {
+    position: absolute;
+    -webkit-animation-name: example; /* Safari 4.0 - 8.0 */
+    -webkit-animation-duration: 4s; /* Safari 4.0 - 8.0 */
+    -webkit-animation-iteration-count: 2; /* Safari 4.0 - 8.0 */
+    -webkit-animation-direction: alternate; /* Safari 4.0 - 8.0 */
+    animation-name: example;
+    animation-duration: 3s;
+    animation-iteration-count: 1;
+  }
+  
+  /* Safari 4.0 - 8.0 */
+  @-webkit-keyframes example {
+    from {bottom: -100%;}
+    to {bottom: 10px;}
+}
+  
+  /* Standard syntax */
+  @keyframes example {
+    from {bottom: -100%;}
+    to {bottom: 10px;}
+}

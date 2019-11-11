@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html ng-app="myApp">
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css"
+        integrity="sha512-dTfge/zgoMYpP7QbHy4gWMEGsbsdZeCXz7irItjcC3sPUFtf0kuFbDz/ixG7ArTxmDjLXDmezHubeNikyKGVyQ=="
+        crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"
+        integrity="sha512-K1qjQ+NcF2TYO/eI3M6v8EiNYZfA95pQumfvcVrTHtwQVDG+aHRqLi/ETn2uB+1JqwYqVG3LIvdm9lj6imS/pQ=="
+        crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="css/index.css">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js">
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.min.js"></script>
+
+
+    <script src="controllers/index.js"></script>
+
+</head>
+
+<body>
+    <iframe src="http://myweb.ttu.edu/fjin/" style="overflow: hidden; height: 100%; width: 100%; position: absolute;">
+        <p>Your browser does not support iframes.</p>
+    </iframe>
+
+
+
+    <div id="header"></div>
+    <div class="container-fluid text-left" ng-controller="AppCtrl">
+        <div class="chatbox-panel" style="background-color: ghostwhite;        ">
+            <div class="chatbox-frame">
+
+                <div class="row content">
+                    <center>
+                        <h2>Ask Robo</h2>
+                    </center>
+
+                    <div id="divmiddle" class="col-sm-8">
+                        <!-- the dynamic body of the website-->
+                        <div id="body">
+
+
+
+
+                            <div class="myframe" id="chatbox_div">
+                                <div ng-repeat="cb in chatbox_list">
+
+                                    <div class="container btn-primary" ng-if="cb.who=='r'">
+                                        <img src="/img/robot.jpg" alt="BG" class="" style="width:100%;">
+                                        <p>{{cb.mention}}</p>
+                                        <span class="time-right">11:00</span>
+                                    </div>
+                                    <div class="container" ng-if="cb.who=='c'" style="background-color: #F0F0F0;">
+                                        <img src="/img/customer.png" alt="Avatar" class="right" style="width:100%;">
+                                        <p>{{cb.mention}}</p>
+                                        <span class="time-left">11:01</span>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <!-- myframe -->
+                            <div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <div class="row content" style="background-color: #F0F0F0; margin: 10px;">
+                    <!--
+                                <form action="#" >
+                                        <input type="text" id="send_msg" value="" placeholder="Please, type your question" size=20>
+                                        <input type="submit" value="Send">
+                                      </form>  
+                            -->
+                    <p>&nbsp;</p>
+                    <div class="col-lg-10">
+                        <input class="form-control input-lg customer_question" ng-model="customer_question"
+                            ng-keypress="sendQuestionByEnterKey($event)" placeholder="Please, type your question" id='customer_question'>
+                    </div>
+                    <div class="col-sm-2">
+                        <b>
+                            <button class="btn btn-primary btn-lg" ng-click="sendQuestion()">Send</button>
+                        </b>
+                    </div>
+                    <p>&nbsp;</p>
+
+                </div>
+            </div>
+            <!--frame-->
+
+        </div>
+        <!--panel-->
+
+    </div>
+
+</body>
+
+</html>
