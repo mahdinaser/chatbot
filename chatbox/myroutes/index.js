@@ -11,7 +11,7 @@ module.exports = {
     sendquestion: function (res, user_id, customer_question) {
         console.log('index.js: sendquestion()');
         currentPath = __dirname;
-        const pyProgram = currentPath + '\\python\\chatbox_service.py';
+        const pyProgram = currentPath + '\python\chatbox_service.py';
         console.log('index.js: sendquestion(), pyProgram', pyProgram);
 
 
